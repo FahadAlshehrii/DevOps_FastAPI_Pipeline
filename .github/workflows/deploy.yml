@@ -24,10 +24,15 @@ jobs:
 
       - name: Deploy to VM via SSH
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          APP_ID: ${{ fromJSON(secrets.AZURE_CREDENTIALS).clientId }}
+          PASSWORD: ${{ fromJSON(secrets.AZURE_CREDENTIALS).clientSecret }}
+          TENANT: ${{ fromJSON(secrets.AZURE_CREDENTIALS).tenantId }}
         with:
           host: ${{ secrets.VM_HOST_IP }}
           username: adminuser
           key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          envs: APP_ID,PASSWORD,TENANT
           script: |
             # 1. Install Docker
             if ! command -v docker &> /dev/null; then
@@ -40,9 +45,12 @@ jobs:
               curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
             fi
             
-            # 3. Pull and Run the App
+            # 3. Login to Azure and ACR
+            sudo az login --service-principal -u $APP_ID -p $PASSWORD --tenant $TENANT
             sudo az acr login --name ${{ secrets.ACR_LOGIN_SERVER }}
+            
+            # 4. Pull and Run the App
             sudo docker stop fastapi-app || true 
             sudo docker rm fastapi-app || true
             sudo docker pull ${{ secrets.ACR_LOGIN_SERVER }}/my-fastapi-app:latest
-            sudo docker run -d --name fastapi-app -p 80:8000 ${{ secrets.ACR_LOGIN_SERVER }}/my-fastapi-app:latest
+            sudo docker run -d --name fastapi-app -p 8000:8000 ${{ secrets.ACR_LOGIN_SERVER }}/my-fastapi-app:latest
