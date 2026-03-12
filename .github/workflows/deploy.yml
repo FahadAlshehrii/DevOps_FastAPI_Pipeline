@@ -29,6 +29,18 @@ jobs:
           username: adminuser
           key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
           script: |
+            # 1. Install Docker
+            if ! command -v docker &> /dev/null; then
+              curl -fsSL https://get.docker.com -o get-docker.sh
+              sudo sh get-docker.sh
+            fi
+            
+            # 2. Install Azure CLI
+            if ! command -v az &> /dev/null; then
+              curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+            fi
+            
+            # 3. Pull and Run the App
             sudo az acr login --name ${{ secrets.ACR_LOGIN_SERVER }}
             sudo docker stop fastapi-app || true 
             sudo docker rm fastapi-app || true
