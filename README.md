@@ -1,4 +1,4 @@
-# 🚀 Automated Azure CI/CD Pipeline and FastAPI Application
+#Automated Azure CI/CD Pipeline and FastAPI Application
 
 An end-to-end DevOps project demonstrating Infrastructure as Code (IaC), containerization, and continuous delivery. 
 
