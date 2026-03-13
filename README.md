@@ -1,11 +1,11 @@
-https://img.shields.io/badge/Azure-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white
-https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white
-https://img.shields.io/badge/Terraform-623CE4?style=for-the-badge&logo=terraform&logoColor=white
-https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white
-https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white
-https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white
-
 # 🚀 Automated Azure CI/CD Pipeline & FastAPI Application
+
+![Azure](https://img.shields.io/badge/Azure-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white)
+![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
+![Terraform](https://img.shields.io/badge/Terraform-623CE4?style=for-the-badge&logo=terraform&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
 
 An end-to-end DevOps project demonstrating Infrastructure as Code (IaC), containerization, and continuous delivery. This project eliminates the "it works on my machine" problem by standardizing the environment and automating the entire deployment lifecycle from a local code commit to a live, cloud-hosted application.
 
@@ -95,9 +95,10 @@ terraform init
 terraform plan
 terraform apply --auto-approve
 ```
+
 ### 2. Configure GitHub Secrets
 
-After Terraform finishes, add these values to your repository under **Settings > Secrets and variables > Actions**. The GitHub Actions workflow relies on these secrets to automatically and securely authenticate during the deployment process :
+After Terraform finishes, add these values to your repository under **Settings > Secrets and variables > Actions**. The GitHub Actions workflow relies on these secrets to automatically and securely authenticate during the deployment process:
 
 * **AZURE_CREDENTIALS:** Service Principal JSON for Azure authentication.
 * **ACR_LOGIN_SERVER:** URL of the private container registry Terraform created.
@@ -123,3 +124,7 @@ terraform destroy --auto-approve
 * **Kubernetes (AKS):** Migrate from a single VM to Azure Kubernetes Service for automatic scaling, self-healing pods, and rolling deployments with zero downtime.
 * **Multi-Region Deployment:** Expand the infrastructure across multiple Azure regions with load balancing to improve availability and reduce latency for users globally.
 * **Monitoring with Grafana & Prometheus:** Integrate Prometheus to scrape application and container metrics, and visualize them through Grafana dashboards for real-time observability into performance, uptime, and resource usage.
+
+---
+
+> Built and maintained as a personal DevOps project. Feel free to fork, adapt, and deploy.
