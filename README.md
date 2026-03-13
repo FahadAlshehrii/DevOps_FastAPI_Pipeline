@@ -124,7 +124,3 @@ terraform destroy --auto-approve
 * **Kubernetes (AKS):** Migrate from a single VM to Azure Kubernetes Service for automatic scaling, self-healing pods, and rolling deployments with zero downtime.
 * **Multi-Region Deployment:** Expand the infrastructure across multiple Azure regions with load balancing to improve availability and reduce latency for users globally.
 * **Monitoring with Grafana & Prometheus:** Integrate Prometheus to scrape application and container metrics, and visualize them through Grafana dashboards for real-time observability into performance, uptime, and resource usage.
-
----
-
-> Built and maintained as a personal DevOps project. Feel free to fork, adapt, and deploy.
