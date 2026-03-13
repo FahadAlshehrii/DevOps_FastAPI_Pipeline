@@ -37,11 +37,14 @@ Terraform provisions all Azure resources. This snippet shows the creation of the
 
 ```hcl
 resource "azurerm_container_registry" "acr" {
-  name                = "myprojectacr"
+  # This combines the name & the random string making it unique
+  # Result example: "myprojectacr x9f2"
+
+  name                = "myprojectacr${random_string.acr_uniqueness.result}" # WITH THIS I NEED TO MAKE IT UNIQUE TO NOT GET A REJECT FROM AZURE
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
   sku                 = "Basic"
-  admin_enabled       = true
+  admin_enabled       = true # to allow for logging in very easily with username & password
 }
 ```
 
@@ -51,11 +54,17 @@ The application is packaged using a slim Python image to keep the image size as 
 
 ```dockerfile
 FROM python:3.11-slim
+
 WORKDIR /app
+
 COPY requirements.txt .
+
 RUN pip install --no-cache-dir -r requirements.txt
+
 COPY . .
+
 EXPOSE 8000
+
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
 
@@ -76,17 +85,23 @@ After the image is built, the pipeline securely SSHs into the Azure VM, authenti
           key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
           envs: APP_ID,PASSWORD,TENANT
           script: |
+            # 1. Install Docker
             if ! command -v docker &> /dev/null; then
               curl -fsSL https://get.docker.com -o get-docker.sh
               sudo sh get-docker.sh
             fi
+            
+            # 2. Install Azure CLI
             if ! command -v az &> /dev/null; then
               curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
             fi
-
+            
+            # 3. Login to Azure and ACR
             sudo az login --service-principal -u $APP_ID -p $PASSWORD --tenant $TENANT
             sudo az acr login --name ${{ secrets.ACR_LOGIN_SERVER }}
-            sudo docker stop fastapi-app || true
+            
+            # 4. Pull and Run the App
+            sudo docker stop fastapi-app || true 
             sudo docker rm fastapi-app || true
             sudo docker pull ${{ secrets.ACR_LOGIN_SERVER }}/my-fastapi-app:latest
             sudo docker run -d --name fastapi-app -p 8000:8000 ${{ secrets.ACR_LOGIN_SERVER }}/my-fastapi-app:latest
