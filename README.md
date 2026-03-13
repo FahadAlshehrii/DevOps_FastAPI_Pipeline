@@ -7,26 +7,33 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
 
-An end-to-end DevOps project demonstrating Infrastructure as Code (IaC), containerization, and continuous delivery. This project eliminates the "it works on my machine" problem by standardizing the environment and automating the entire deployment lifecycle from a local code commit to a live, cloud-hosted application.
+An end-to-end DevOps project demonstrating Infrastructure as Code (IaC), containerization, and continuous delivery.
 
-## System Architecture
+This project eliminates the "it works on my machine" problem by standardizing the environment and automating the entire deployment lifecycle—from a local code commit to a live, cloud-hosted application accessible on the public internet.
 
-This pipeline is built on a modern DevOps toolchain:
+## System Architecture and The "Whys"
 
-1. **Source Control (GitHub):** Single source of truth for both application code and infrastructure configuration.
-2. **Infrastructure as Code (Terraform):** Defines Azure networking, security groups, container registry, and virtual machines. Uses a declarative approach so infrastructure is reproducible, version-controlled, and can be destroyed instantly.
-3. **CI/CD Automation (GitHub Actions):** A YAML-based workflow that triggers on pushes to the main branch. Native GitHub integration removes the need for a separate CI server like Jenkins.
-4. **Containerization (Docker):** Packages the FastAPI application and its dependencies into a single portable artifact, guaranteeing the same behavior in production as on a local machine.
-5. **Image Storage (Azure Container Registry):** Private registry for Docker images within the Azure ecosystem, enabling low-latency and secure image pulls to the VM.
-6. **Compute (Azure Virtual Machine):** Ubuntu Linux server hosting the running application with full control over the OS, networking, and Docker daemon.
+This pipeline is built on a modern DevOps toolchain. Here is how the system flows and why each tool was selected:
+
+1. **Source Control (GitHub):** Acts as the single source of truth for both application code and infrastructure configuration.
+2. **Infrastructure as Code (Terraform):** Defines the Azure networking, security groups, container registry, and virtual machines.
+   * Why Terraform? It uses a declarative approach and state management, meaning the infrastructure is highly reproducible, version-controlled, and can be destroyed instantly to manage cloud costs.
+3. **CI/CD Automation (GitHub Actions):** A YAML-based workflow that triggers on pushes to the main branch.
+   * Why GitHub Actions? Native GitHub integration removes the need for managing and hosting a separate continuous integration server like Jenkins.
+4. **Containerization (Docker):** Packages the FastAPI application and its dependencies into a single, portable artifact.
+   * Why Docker? It guarantees that the application runs exactly the same in the production cloud environment as it does on a developer's local laptop.
+5. **Image Storage (Azure Container Registry):** A secure, private vault for storing built Docker images.
+   * Why ACR? Keeping the registry within the Azure ecosystem ensures low-latency, highly secure image pulls to the Azure Virtual Machine without traversing the public internet.
+6. **Compute (Azure Virtual Machine):** An Ubuntu Linux server that hosts the running application.
+   * Why a VM? It provides absolute control over the host operating system, networking rules, and Docker daemon configurations.
 
 ## Code Highlights
 
-Here are the core configuration snippets that power this project:
+Here are the core configuration snippets that power the pipeline:
 
 ### 1. Infrastructure as Code (Terraform)
 
-Terraform provisions all Azure resources. This snippet shows the creation of the private Azure Container Registry used to securely store Docker images:
+Terraform provisions all Azure resources. This snippet shows the creation of the private Azure Container Registry used to securely store the Docker images:
 
 ```hcl
 resource "azurerm_container_registry" "acr" {
@@ -40,7 +47,7 @@ resource "azurerm_container_registry" "acr" {
 
 ### 2. Containerization (Dockerfile)
 
-The application is packaged using a slim Python image to keep image size minimal:
+The application is packaged using a slim Python image to keep the image size as small as possible:
 
 ```dockerfile
 FROM python:3.11-slim
@@ -54,7 +61,7 @@ CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 
 ### 3. Continuous Deployment (GitHub Actions)
 
-After the image is built, the pipeline SSHs into the Azure VM, authenticates using injected secrets, and deploys the new container with no manual intervention needed:
+After the image is built, the pipeline securely SSHs into the Azure VM, authenticates using injected secrets, and deploys the new container with no manual intervention needed. Notice the conditional logic that automatically installs Docker and Azure CLI if the server is blank:
 
 ```yaml
       - name: Deploy to VM via SSH
@@ -69,6 +76,14 @@ After the image is built, the pipeline SSHs into the Azure VM, authenticates usi
           key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
           envs: APP_ID,PASSWORD,TENANT
           script: |
+            if ! command -v docker &> /dev/null; then
+              curl -fsSL https://get.docker.com -o get-docker.sh
+              sudo sh get-docker.sh
+            fi
+            if ! command -v az &> /dev/null; then
+              curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+            fi
+
             sudo az login --service-principal -u $APP_ID -p $PASSWORD --tenant $TENANT
             sudo az acr login --name ${{ secrets.ACR_LOGIN_SERVER }}
             sudo docker stop fastapi-app || true
@@ -79,15 +94,15 @@ After the image is built, the pipeline SSHs into the Azure VM, authenticates usi
 
 ## Key Engineering Decisions
 
-* **Zero-Downtime Deployments:** The deployment script pulls the new image before stopping the old container, minimizing downtime during updates.
-* **Security First:** Azure Network Security Groups restrict traffic to SSH (Port 22) and HTTP (Port 8000) only. Credentials and SSH keys are managed via GitHub Secrets and never hardcoded.
-* **Automated Bootstrapping:** The deployment script checks for Docker and the Azure CLI on the VM and installs them automatically if missing.
+* **Zero-Downtime Deployments:** The deployment script pulls the new image before tearing down the old container, minimizing application downtime during updates.
+* **Security First:** Infrastructure is locked down via Azure Network Security Groups. Only SSH (Port 22) and HTTP (Port 8000) traffic are permitted. Azure credentials and SSH keys are never hardcoded; they are strictly managed via GitHub Secrets.
+* **Automated Bootstrapping:** The SSH deployment script includes conditional logic to check for the presence of Docker and the Azure CLI, installing them automatically if they are missing.
 
 ## 🛠️ How to Run
 
 ### 1. Provision the Infrastructure
 
-Make sure you have the Azure CLI and Terraform installed, then run:
+Make sure you have the Azure CLI and Terraform installed on your local machine, then run:
 
 ```bash
 az login
@@ -107,13 +122,13 @@ After Terraform finishes, add these values to your repository under **Settings >
 
 ### 3. Deploy the Application
 
-Push any change to the `main` branch. The `.github/workflows/deploy.yml` pipeline will automatically log into Azure, build the Docker image, push it to the registry, SSH into the VM, and start the container on Port 8000.
+Push any code changes to the `main` branch. The `.github/workflows/deploy.yml` pipeline will automatically log into Azure, build the Docker image, push it to the registry, SSH into the VM, and start the container on Port 8000.
 
 The app will be live at `http://<VM_PUBLIC_IP>:8000/docs`.
 
 ### 4. Tear It All Down
 
-When done, destroy all cloud resources to avoid unnecessary costs:
+When done, destroy all cloud resources to avoid unnecessary Azure costs:
 
 ```bash
 terraform destroy --auto-approve
