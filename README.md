@@ -9,7 +9,7 @@
 
 An end-to-end DevOps project demonstrating Infrastructure as Code (IaC), containerization, and continuous delivery.
 
-This project eliminates the "it works on my machine" problem by standardizing the environment and automating the entire deployment lifecycle—from a local code commit to a live, cloud-hosted application accessible on the public internet.
+This project eliminates the "it works on my machine" problem by standardizing the environment and automating the entire deployment lifecycle from a local code commit to a live, cloud-hosted application accessible on the public internet.
 
 ## System Architecture and The "Whys"
 
