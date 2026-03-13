@@ -65,5 +65,4 @@ When done, destroy all cloud resources to avoid unnecessary costs:
 terraform destroy --auto-approve
 ```
 
----
 
