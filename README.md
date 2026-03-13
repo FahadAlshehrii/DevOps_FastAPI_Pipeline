@@ -7,16 +7,23 @@ An end-to-end DevOps project demonstrating Infrastructure as Code (IaC), contain
 This pipeline is built on a modern DevOps toolchain:
 
 1. **Source Control (GitHub):** Single source of truth for both application code and infrastructure configuration.
-2. **Infrastructure as Code (Terraform):** Defines Azure networking, security groups, container registry, and virtual machines. Uses a declarative approach and state management so infrastructure is reproducible, version-controlled, and can be destroyed instantly.
-3. **CI/CD Automation (GitHub Actions):** A YAML-based workflow that triggers on pushes to the main branch. Native GitHub integration removes the need for a separate CI server like Jenkins.
-4. **Containerization (Docker):** Packages the FastAPI application and its dependencies into a single portable artifact, guaranteeing the same behavior in production as on a local machine.
-5. **Image Storage (Azure Container Registry):** Private registry for Docker images within the Azure ecosystem, enabling low-latency and secure image pulls to the VM.
-6. **Compute (Azure Virtual Machine):** Ubuntu Linux server hosting the running application with full control over the OS, networking, and Docker daemon.
+   
+3. **Infrastructure as Code (Terraform):** Defines Azure networking, security groups, container registry, and virtual machines. Uses a declarative approach and state management so infrastructure is reproducible, version-controlled, and can be destroyed instantly.
+   
+5. **CI/CD Automation (GitHub Actions):** A YAML-based workflow that triggers on pushes to the main branch. Native GitHub integration removes the need for a separate CI server like Jenkins.
+   
+7. **Containerization (Docker):** Packages the FastAPI application and its dependencies into a single portable artifact, guaranteeing the same behavior in production as on a local machine.
+   
+9. **Image Storage (Azure Container Registry):** Private registry for Docker images within the Azure ecosystem, enabling low-latency and secure image pulls to the VM.
+    
+11. **Compute (Azure Virtual Machine):** Ubuntu Linux server hosting the running application with full control over the OS, networking, and Docker daemon.
 
 ## Key Engineering Decisions
 
 * **Zero-Downtime Deployments:** The deployment script pulls the new image before stopping the old container, minimizing downtime during updates.
+  
 * **Security First:** Azure Network Security Groups restrict traffic to SSH (Port 22) and HTTP (Port 8000) only. Credentials and SSH keys are managed via GitHub Secrets and never hardcoded.
+  
 * **Automated Bootstrapping:** The deployment script checks for Docker and the Azure CLI on the VM and installs them automatically if missing.
 
 ## 🛠️ How to Run
@@ -37,8 +44,11 @@ terraform apply --auto-approve
 After Terraform finishes, add these values to your repository under Settings > Secrets and variables > Actions:
 
 * **AZURE_CREDENTIALS** — Service Principal JSON for Azure authentication.
+  
 * **ACR_LOGIN_SERVER** — URL of the container registry Terraform created.
+  
 * **VM_HOST_IP** — Public IP of the Virtual Machine.
+  
 * **VM_SSH_PRIVATE_KEY** — Your private SSH key for remote access.
 
 ### 3. Deploy the Application
